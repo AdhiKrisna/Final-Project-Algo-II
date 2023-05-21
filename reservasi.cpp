@@ -60,7 +60,7 @@ ifstream ifs;
 // akun
 int pilihMenu; // Menu dll
 int userCount, indexUser, indexPenumpang; // Indexing
-bool loopBack, same, adaAkun, berhasilLogin; // akun
+bool loopBack, same, adaAkun; // akun
 
 //ticketing
 int passengerTemp, passengerNum, inputReservation;
@@ -70,6 +70,7 @@ char is_ulang;
 //Declare Void System
 void login();
 void bikinAkun(fstream &file);
+void hapusAkun();
 void top_up();
 void pesenTiket();
 void maskapai();
@@ -114,7 +115,8 @@ int loginPage(){
     cout << "\t\t" << string(26, '-') << endl << endl;
     cout << "1. Login\n";
     cout << "2. Register\n";
-    cout << "3. Exit";
+    cout << "3. Delete Account\n";
+    cout << "4. Exit";
     cout << "\n>> ";cin>>pilihMenu;    
     cin.ignore();
     return pilihMenu;
@@ -147,47 +149,19 @@ int mainMenu(){
 }
 
 int main(){
-    int Login, Program_Utama;
-    enum option{LOGIN = 1, REGISTER, EXIT};
+    int Login;
+    enum option{LOGIN = 1, REGISTER, HAPUS, EXIT};
     do{
         Login = loginPage();
         switch (Login){
         case LOGIN:
             login();
-            if(adaAkun){
-                if(berhasilLogin == true){
-                    do{
-                        Program_Utama = mainMenu();
-                        switch (Program_Utama){
-                        case 1:
-                            pesenTiket();
-                            break; // break case
-                        case 2:
-                            output();
-                            break; //Break case
-                        case 3:
-                            top_up();
-                            getch();      
-                            break;       
-                        case 4:
-                            cout << "\nBack to Login Page. . . ";
-                            getch();  
-                            berhasilLogin = false;
-                            break;  
-                        default:
-                            cout << "\nMenu unavailable, try again. . .";
-                            getch();
-                            break;
-                        }
-                    }while (Program_Utama != 4);
-                    break; // Break case
-                }
-                else if(berhasilLogin == false){
-                    break; // Break case
-                }
-            } 
+            if(adaAkun) break;
         case REGISTER:
             bikinAkun(file);
+            break;
+        case HAPUS:
+            hapusAkun();
             break;
         case EXIT:
             cout << "\nThank you. See You Again.";
@@ -204,7 +178,8 @@ int main(){
 
 void login(){
     //Local Var
-    int userLogin;
+    bool berhasilLogin;
+    int userLogin, Program_Utama;
     string passLogin;
     do{
         system("cls");
@@ -262,6 +237,35 @@ void login(){
             }
         }
     }while(loopBack);
+
+    if(adaAkun){
+                if(berhasilLogin == true){
+                    do{
+                        Program_Utama = mainMenu();
+                        switch (Program_Utama){
+                        case 1:
+                            pesenTiket();
+                            break; // break case
+                        case 2:
+                            output();
+                            break; //Break case
+                        case 3:
+                            top_up();
+                            getch();      
+                            break;       
+                        case 4:
+                            cout << "\nBack to Login Page. . . ";
+                            getch();  
+                            berhasilLogin = false;
+                            break;  
+                        default:
+                            cout << "\nMenu unavailable, try again. . .";
+                            getch();
+                            break;
+                        }
+                    }while (Program_Utama != 4);
+                }
+            } 
 }
 
 void bikinAkun(fstream &file){
@@ -286,7 +290,6 @@ void bikinAkun(fstream &file){
         cout << "Password : "; getline(cin, user[userCount].password);
         if(user[userCount].password == "back") cout << "Please don't use \"back\" as a password. Try again.\n";
     }while (user[userCount].password == "back" || user[userCount].password == "");
-    cout << "\n\nRegistration Success!\n\n";
     // bikin baru data
     ofs.open("Akun/data.txt", ios::app);
         ofs << user[userCount].saldo << " "
@@ -313,8 +316,106 @@ void bikinAkun(fstream &file){
         }
     }
     eksportAkunData(ofs);
-    cout << "Back to Login Page . . .";
+    cout << "\n\nLoading.";
+    Sleep(1000);
+    cout << ".";
+    Sleep(1000);
+    cout << ".";
+    Sleep(1000);
+    cout << "\n\nRegister Success!\n";
+    cout << "Back to Login Page. . .";
     getch();
+}
+
+void hapusAkun(){
+    int userDelete;
+    string passDelete, delFileS;
+    bool berhasilDelete;
+    const char *delFile;
+    do{
+        system("cls");
+        cout << "\t\t" << string(34, '-') << endl;
+        cout << "\t\t\t   Delete Account\n";
+        cout << "\t\t" << string(34, '-') << endl << endl;
+        if(userCount == 0){
+            cout << "You don't have an account, Nothing can be deleted.";
+            getch();
+        }
+        else{
+            cout << "List Account\n";
+            cout << string(12, '-') << endl;
+
+            //show registered account
+            for(int i = 0; i <= userCount; i++){
+                if(i < userCount) cout << i + 1 << ". " << user[i].username << endl;
+                else if(i == userCount) cout << endl<< i + 1 << ". Back\n";
+            }
+            cout << "\nChoose an account to delete.\n>> "; cin >> userDelete;
+            cin.ignore();
+            for(int i = 0; i <= userCount; i++){
+                if(userDelete - 1 == i){
+                    cout << "\n\nDeleting " << user[i].username <<"'s account. Please enter the password.";
+                    while(passDelete != "back"){
+                        cout << "\n\nPassword : "; getline(cin, passDelete);
+                        if(passDelete == user[i].password){ //berhasil delete
+                            indexUser = i;
+                            berhasilDelete = true;
+                            break; //break dari while
+                        }
+                        else{
+                            cout << "Password is wrong, is that you?\n";
+                            cout << "Try again or Input \"back\" to stop trying. . .\n";
+                            loopBack = true;
+                        }
+                    }
+                    loopBack = false; // kalo berhasil delete
+                    break; // break dari for
+                }
+                if(userDelete - 1 == userCount){ //back
+                    berhasilDelete = false;
+                    loopBack = false;
+                    break;
+                }
+                else if(userDelete - 1 > userCount || userDelete - 1 < 1 || cin.fail()){
+                    cout << "\nInvalid input. Choose the available account. . . ";
+                    getch();
+                    berhasilDelete = false;
+                    loopBack = true;
+                    break; //break dari for
+                }
+            }
+        }
+    }while(loopBack);
+
+    if(berhasilDelete){
+        
+        delFileS = "Database/Ticket/ int " + user[indexUser].username + ".txt";
+        delFile = delFileS.c_str();
+        int a = remove(delFile);
+
+        delFileS = "Database/Ticket/ string " + user[indexUser].username + ".txt";
+        delFile = delFileS.c_str();
+        a = remove(delFile);
+
+        delFileS = "Database/index penumpang/index " + user[indexUser].username + ".txt";
+        delFile = delFileS.c_str();
+        a = remove(delFile);
+
+        swap(user[indexUser], user[userCount-1]);
+        userCount--;
+
+        eksportAkunData(ofs);
+        eksportAkunIndex(ofs);
+        cout << "\n\nLoading.";
+        Sleep(1000);
+        cout << ".";
+        Sleep(1000);
+        cout << ".";
+        Sleep(1000);
+        cout << "\n\nSuccess!\nDeleting " << user[userCount].username << "'s account.\n";
+        cout << "Back to Login Page. . .";
+        getch();
+    }
 }
 
 void top_up(){
